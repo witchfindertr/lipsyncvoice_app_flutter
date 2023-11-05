@@ -165,10 +165,10 @@ class _HomePageState extends State<HomePage> {
                      FloatingActionButton(
                           backgroundColor: Colors.black,
                           onPressed: () async {
-                            final result = await FilePicker.platform.pickFiles();
+                            final result = await FilePicker.platform.pickFiles(type: FileType.video);
                             if (result == null) return;
                             final file = result.files.first;
-                            openFile(file);
+
                           },
                           child: const Icon(Icons.add, color: Colors.white,),
                         ),
