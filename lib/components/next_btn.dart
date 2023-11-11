@@ -2,17 +2,31 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lipsyncvoice_app/screens/homepage.dart';
 
-class NextButton extends StatelessWidget {
-  const NextButton({super.key});
+class NextButton extends StatefulWidget {
+  const NextButton({super.key,});
 
+  @override
+  State<NextButton> createState() => _NextButtonState();
+}
+
+class _NextButtonState extends State<NextButton> {
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 20),
       child: ElevatedButton(
-        onPressed: () {
-          // Add your button click action here
+        onPressed: () async {
+          setState(() {
+            isLoading = true;
+          });
+          await Future.delayed(const Duration(seconds: 2));
+          setState(() {
+            isLoading = false;
+          });
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const HomePage()));
         },
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF1C1C1C)), // Background color
@@ -23,7 +37,7 @@ class NextButton extends StatelessWidget {
             ),
           ),
         ),
-        child: Text(
+        child: !isLoading ? Text(
           'Next',
           style: GoogleFonts.poppins(
             color: Colors.white,
@@ -31,7 +45,7 @@ class NextButton extends StatelessWidget {
             fontWeight: FontWeight.bold
 
           ),
-        ),
+        ) : CircularProgressIndicator(color: Colors.white,),
       ),
     );
   }

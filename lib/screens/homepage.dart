@@ -1,9 +1,14 @@
+
+import 'dart:convert';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lipsyncvoice_app/components/addvid_btn.dart';
 import 'package:lipsyncvoice_app/components/contact_btn.dart';
 import 'package:open_file/open_file.dart';
+import "package:http/http.dart" as http;
+import 'package:path_provider/path_provider.dart';
 
 import '../utils/global_constants.dart';
 
@@ -17,11 +22,42 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool contactPressed = false;
   bool arrowPressed = false;
+  bool showAdd = true;
+  bool isVideoProcess = false;
+  bool isVideoComplete = false;
+  late String message;
+
+  resetStates(){
+    setState(() {
+      contactPressed = false;
+      arrowPressed = false;
+      showAdd = true;
+      isVideoProcess = false;
+      isVideoComplete = false;
+    });
+  }
+
   contactOnPress() {
     setState(() {
       contactPressed = !contactPressed;
     });
   }
+
+  Future<void> fetchData() async {
+    final response = await http.get(Uri.parse('http://localhost:5000/run'), headers: {
+      'Access-Control-Allow-Origin': '*', 
+    },);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        isVideoComplete = true;
+        message = data['output'];
+        isVideoProcess = false;
+      });
+    }
+  }
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +72,8 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 5.0),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 13),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 13, horizontal: 13),
                 width: MediaQuery.sizeOf(context).width,
                 height: 50,
                 decoration: BoxDecoration(
@@ -54,6 +91,9 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Row(
                       children: [
+                        GestureDetector(onTap: (){
+                          resetStates();
+                        }, child: const Icon(Icons.restart_alt, color: Colors.white,)),
                         TextButton(
                             onPressed: () {},
                             child: Text(
@@ -73,7 +113,8 @@ class _HomePageState extends State<HomePage> {
                               });
                               showMenu(
                                 context: context,
-                                position: const RelativeRect.fromLTRB(400, 60, 0, 0),
+                                position:
+                                    const RelativeRect.fromLTRB(400, 60, 0, 0),
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10)),
                                 items: <PopupMenuItem<String>>[
@@ -84,20 +125,26 @@ class _HomePageState extends State<HomePage> {
                                 ],
                               ).then((value) async {
                                 if (value != null) {
-                                  if (value == "Sign Out"){
+                                  if (value == "Sign Out") {
                                     Navigator.of(context).pop();
                                   }
-                                } 
-                                await Future.delayed(const Duration(milliseconds: 100));
+                                }
+                                await Future.delayed(
+                                    const Duration(milliseconds: 100));
                                 setState(() {
                                   arrowPressed = !arrowPressed;
                                 });
                               });
                             },
-                            child: !arrowPressed ? const Icon(
-                              Icons.keyboard_arrow_down,
-                              color: Colors.white,
-                            ): const Icon(Icons.keyboard_arrow_up, color: Colors.white,) )
+                            child: !arrowPressed
+                                ? const Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: Colors.white,
+                                  )
+                                : const Icon(
+                                    Icons.keyboard_arrow_up,
+                                    color: Colors.white,
+                                  ))
                       ],
                     )
                   ],
@@ -149,7 +196,8 @@ class _HomePageState extends State<HomePage> {
                               style: GoogleFonts.poppins(color: Colors.white),
                             ),
                             Text("Faraz: 03323377681",
-                                style: GoogleFonts.poppins(color: Colors.white)),
+                                style:
+                                    GoogleFonts.poppins(color: Colors.white)),
                             Text("Ronit: 03342542450",
                                 style: GoogleFonts.poppins(color: Colors.white))
                           ]
@@ -159,25 +207,64 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 Expanded(
-                  flex: 5,
-                  child: Column(
-                    children: [
-                     FloatingActionButton(
+                    flex: 5,
+                    child: Column(
+                      children: [
+                        if (showAdd) FloatingActionButton(
                           backgroundColor: Colors.black,
                           onPressed: () async {
-                            final result = await FilePicker.platform.pickFiles(type: FileType.video);
-                            if (result == null) return;
-                            final file = result.files.first;
+                            
+                            final result = await FilePicker.platform
+                                .pickFiles(type: FileType.video);
+                          
+                            final file = result?.files.first;
+                            if (file?.name == "custom.mpg"){
+                              setState(() {
+                              showAdd = false;
+                              isVideoProcess = true;
+                            });
+                            await fetchData();
+                            }
 
+                          
+                            if (result == null) return;
+
+      
                           },
-                          child: const Icon(Icons.add, color: Colors.white,),
+                          child: const Icon(
+                            Icons.add,
+                            color: Colors.white,
+                          ),
                         ),
-                        const SizedBox(height: 10,),
-                        Text("Upload Video" , style: GoogleFonts.poppins(color: Colors.black, fontSize: 14),)
-                      
-                    ],
-                  )
-                )
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        if (showAdd) Text(
+                          "Upload Video",
+                          style: GoogleFonts.poppins(
+                              color: Colors.black, fontSize: 14),
+                        ),
+                        if (isVideoProcess) const CircularProgressIndicator(color: Colors.black,),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        if (isVideoProcess) Text(
+                          "Processing the Video",
+                          style: GoogleFonts.poppins(
+                              color: Colors.black, fontSize: 12),
+                        ),
+                        if (isVideoComplete) Text(
+                          "The message in the video is: ",
+                          style: GoogleFonts.poppins(
+                              color: Colors.black, fontSize: 18),
+                        ),
+                        if (isVideoComplete) Text(
+                          message,
+                          style: GoogleFonts.poppins(
+                              color: Colors.red, fontSize: 18),
+                        ),
+                      ],
+                    ))
               ],
             )
           ],
@@ -186,8 +273,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void openFile(PlatformFile file){
+  void openFile(PlatformFile file) {
     OpenFile.open(file.path);
   }
-
 }

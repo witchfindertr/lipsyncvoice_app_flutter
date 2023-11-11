@@ -50,7 +50,7 @@ class LoginScreen extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(right: 15),
                     child: Image.asset(
-                      "assets/login_poster.png",
+                      "assets/ScreenHome.png",
                       width: 400,
                       height: 400,
                     ),
