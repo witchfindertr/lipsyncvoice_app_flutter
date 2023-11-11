@@ -22,15 +22,16 @@ class _NextButtonState extends State<NextButton> {
           setState(() {
             isLoading = true;
           });
-          await Future.delayed(const Duration(seconds: 2));
-          setState(() {
-            isLoading = false;
+          await Future.delayed(const Duration(seconds: 2)).then((value) => {
+            setState(() {
+            isLoading = false; }),
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const HomePage()))
           });
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const HomePage()));
+          
         },
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF1C1C1C)), // Background color
-          minimumSize: MaterialStateProperty.all<Size>(Size(300.0, 50.0)), // Button width
+          backgroundColor: MaterialStateProperty.all<Color>(const Color(0xFF1C1C1C)), // Background color
+          minimumSize: MaterialStateProperty.all<Size>(const Size(300.0, 50.0)), // Button width
           shape: MaterialStateProperty.all<OutlinedBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10.0), // Circular border radius
@@ -45,7 +46,10 @@ class _NextButtonState extends State<NextButton> {
             fontWeight: FontWeight.bold
 
           ),
-        ) : CircularProgressIndicator(color: Colors.white,),
+        ) : const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2,)),
       ),
     );
   }

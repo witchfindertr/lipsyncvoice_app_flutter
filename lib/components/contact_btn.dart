@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 class ContactButton extends StatelessWidget {
   final String btnName;
   final Function() onPressed;
-  bool isPressed;
-  ContactButton({super.key, required this.btnName, required this.onPressed, required this.isPressed});
+  final bool isPressed;
+  const ContactButton({super.key, required this.btnName, required this.onPressed, required this.isPressed});
 
 
   @override
@@ -17,7 +17,8 @@ class ContactButton extends StatelessWidget {
       child: ElevatedButton(
               onPressed: onPressed,
               style: ElevatedButton.styleFrom(
-                primary: Colors.grey,
+                // primary: Colors.grey,
+                backgroundColor: Colors.grey,
               ),
               child: 
                   Row(

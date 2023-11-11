@@ -5,19 +5,19 @@ import 'package:flutter/material.dart';
 
 class AddVideoButton extends StatelessWidget {
   final String btnName;
-  IconData icon;
-  AddVideoButton({super.key, required this.btnName, required this.icon});
+  final IconData icon;
+  final Function() onPressed;
+  const AddVideoButton({super.key, required this.btnName, required this.icon, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: 160,
       child: ElevatedButton(
-              onPressed: () {
-        
-              },
+              onPressed: onPressed,
               style: ElevatedButton.styleFrom(
-                primary: Colors.grey,
+                // primary: Colors.grey,
+                backgroundColor: Colors.grey
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -26,7 +26,7 @@ class AddVideoButton extends StatelessWidget {
                   const SizedBox(width: 2,),
                   Text(
                     btnName,
-                    style: TextStyle(fontSize: 12, color: Colors.black),
+                    style: const TextStyle(fontSize: 12, color: Colors.black),
                   ), 
                 ],
               ),

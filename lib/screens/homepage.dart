@@ -1,14 +1,17 @@
 
 import 'dart:convert';
-
+import 'dart:typed_data';
+import 'dart:io';
+import 'dart:async';
+import 'package:universal_image_picker_web/image_picker_web.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lipsyncvoice_app/components/addvid_btn.dart';
 import 'package:lipsyncvoice_app/components/contact_btn.dart';
 import 'package:open_file/open_file.dart';
+import 'dart:html' as html;
 import "package:http/http.dart" as http;
-import 'package:path_provider/path_provider.dart';
 
 import '../utils/global_constants.dart';
 
@@ -57,6 +60,29 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void uploadVideo(Uint8List videoData) async {
+     try {
+      final response = await http.post(
+        Uri.parse('http://localhost:5000/run'),
+        body: videoData,
+        headers: {
+          'Content-Type': 'video/mpg', 
+        },
+      );
+      if (response.statusCode == 200){
+        final data = json.decode(response.body);
+       setState(() {
+        isVideoComplete = true;
+        message = data['output'];
+        isVideoProcess = false;
+      });
+      }}
+
+      catch(error){
+        print(error.toString());
+      }
+  
+  }
   
 
   @override
@@ -120,7 +146,17 @@ class _HomePageState extends State<HomePage> {
                                 items: <PopupMenuItem<String>>[
                                   const PopupMenuItem<String>(
                                     value: 'Sign Out',
-                                    child: Text('Sign Out'),
+                                    child: SizedBox(
+                                      width: 95,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                        Icon(Icons.logout_sharp),
+                                        SizedBox(width: 2,),
+                                        Text('Sign Out'),
+                                        SizedBox(width: 2,),]
+                                        ),
+                                    ),
                                   ),
                                 ],
                               ).then((value) async {
@@ -172,6 +208,15 @@ class _HomePageState extends State<HomePage> {
                           AddVideoButton(
                             icon: Icons.add_circle,
                             btnName: "Upload Video",
+                            onPressed: () async {
+                              await ImagePickerWeb.getVideoAsBytes().then((value) => {
+                              setState(() {
+                              showAdd = false;
+                              isVideoProcess = true;
+                            }),
+                              uploadVideo(value!)
+                            });
+                            },
                           ),
                           const SizedBox(
                             height: 10,
@@ -179,6 +224,7 @@ class _HomePageState extends State<HomePage> {
                           AddVideoButton(
                             icon: Icons.history,
                             btnName: "View History",
+                            onPressed: (){},
                           ),
                           const SizedBox(
                             height: 10,
@@ -213,23 +259,27 @@ class _HomePageState extends State<HomePage> {
                         if (showAdd) FloatingActionButton(
                           backgroundColor: Colors.black,
                           onPressed: () async {
-                            
-                            final result = await FilePicker.platform
-                                .pickFiles(type: FileType.video);
-                          
-                            final file = result?.files.first;
-                            if (file?.name == "custom.mpg"){
+                            // Uint8List? videoData = 
+                            await ImagePickerWeb.getVideoAsBytes().then((value) => {
                               setState(() {
                               showAdd = false;
                               isVideoProcess = true;
+                            }),
+                              uploadVideo(value!)
                             });
-                            await fetchData();
-                            }
-
+                            
+                            // final result = await FilePicker.platform
+                            //     .pickFiles(type: FileType.video);
                           
-                            if (result == null) return;
-
-      
+                            // final file = result?.files.first;
+                            // if (file?.name == "custom.mpg"){
+                            //   setState(() {
+                            //   showAdd = false;
+                            //   isVideoProcess = true;
+                            // });
+                            // await fetchData();
+                            // }
+                            // if (result == null) return;      
                           },
                           child: const Icon(
                             Icons.add,

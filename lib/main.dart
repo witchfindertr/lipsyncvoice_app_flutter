@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lipsyncvoice_app/screens/homepage.dart';
 import 'package:lipsyncvoice_app/screens/login_screen.dart';
 
 void main() {

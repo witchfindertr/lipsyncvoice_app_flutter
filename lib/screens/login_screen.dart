@@ -16,7 +16,7 @@ class LoginScreen extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 10,),
+          // const SizedBox(height: 10,),
           Text("Lips Sync Voice", style: GoogleFonts.smoochSans(fontSize: 70, color: Colors.white),),
           const SizedBox(height: 20,),
           Center(
@@ -63,7 +63,10 @@ class LoginScreen extends StatelessWidget {
           
         ],
       ),
-      bottomNavigationBar: Text("\u00A9 2023 Habib University Capstone Project. All Rights Reserved", style: GoogleFonts.poppins(fontSize: 12, color: Colors.white), textAlign: TextAlign.center,),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Text("\u00A9 2023 Habib University Capstone Project. All Rights Reserved", style: GoogleFonts.poppins(fontSize: 12, color: Colors.white), textAlign: TextAlign.center,),
+      ),
     );
   }
 }
