@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PasswordTextField extends StatefulWidget {
+  final TextEditingController controller;
+  PasswordTextField({required this.controller});
+
   @override
-  _MyPasswordFieldState createState() => _MyPasswordFieldState();
+  State<PasswordTextField> createState() => _MyPasswordFieldState();
 }
 
 class _MyPasswordFieldState extends State<PasswordTextField> {
@@ -21,6 +24,7 @@ class _MyPasswordFieldState extends State<PasswordTextField> {
       margin: const EdgeInsets.only(top: 20),
       width: 300,
       child: TextFormField(
+        controller: widget.controller,
         style: GoogleFonts.poppins(color: const Color(0xFF1C1C1C), fontSize: 12),
           decoration: InputDecoration(
             filled: true,

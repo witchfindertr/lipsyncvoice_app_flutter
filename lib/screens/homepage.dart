@@ -1,8 +1,11 @@
 
 import 'dart:convert';
+import 'dart:html';
 import 'dart:typed_data';
 import 'dart:io';
 import 'dart:async';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:lipsyncvoice_app/screens/view_history.dart';
 import 'package:universal_image_picker_web/image_picker_web.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +19,8 @@ import "package:http/http.dart" as http;
 import '../utils/global_constants.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required this.user_id});
+  final int user_id;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -29,6 +33,8 @@ class _HomePageState extends State<HomePage> {
   bool isVideoProcess = false;
   bool isVideoComplete = false;
   late String message;
+  AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isPlaying = false;
 
   resetStates(){
     setState(() {
@@ -36,6 +42,7 @@ class _HomePageState extends State<HomePage> {
       arrowPressed = false;
       showAdd = true;
       isVideoProcess = false;
+      _isPlaying = false;
       isVideoComplete = false;
     });
   }
@@ -46,24 +53,24 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> fetchData() async {
-    final response = await http.get(Uri.parse('http://localhost:5000/run'), headers: {
-      'Access-Control-Allow-Origin': '*', 
-    },);
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      setState(() {
-        isVideoComplete = true;
-        message = data['output'];
-        isVideoProcess = false;
-      });
-    }
-  }
+  // Future<void> fetchData() async {
+  //   final response = await http.get(Uri.parse('http://localhost:5000/run'), headers: {
+  //     'Access-Control-Allow-Origin': '*', 
+  //   },);
+  //   if (response.statusCode == 200) {
+  //     final data = json.decode(response.body);
+  //     setState(() {
+  //       isVideoComplete = true;
+  //       message = data['output'];
+  //       isVideoProcess = false;
+  //     });
+  //   }
+  // }
 
   void uploadVideo(Uint8List videoData) async {
      try {
       final response = await http.post(
-        Uri.parse('http://localhost:5000/run'),
+        Uri.parse('http://localhost:5000/runTest'),
         body: videoData,
         headers: {
           'Content-Type': 'video/mpg', 
@@ -75,6 +82,7 @@ class _HomePageState extends State<HomePage> {
         isVideoComplete = true;
         message = data['output'];
         isVideoProcess = false;
+        // createHistory('custom.mpg', message);
       });
       }}
 
@@ -82,6 +90,79 @@ class _HomePageState extends State<HomePage> {
         print(error.toString());
       }
   
+  }
+
+  void getAudio(Uint8List videoData) async {
+
+     print("getAudio called");
+     try {
+      final response = await http.post(
+        Uri.parse('http://localhost:5000/runTest'),
+        body: videoData,
+        headers: {
+          'Content-Type': 'video/mpg', 
+        },
+      );
+      if (response.statusCode == 200){
+        print("API hit succesful");
+        var uint8List = response.bodyBytes;
+        print(uint8List.toString());
+        // Create a Blob and create an object URL
+        var blob = Blob([uint8List], 'audio/wav');
+        var objectUrl = Url.createObjectUrlFromBlob(blob);
+        print("object Url: $objectUrl");
+
+        // Create an audio element and set the source
+        var audio = AudioElement()
+          ..src = objectUrl
+          ..controls = true; // Show controls for play/pause
+
+        // Append the audio element to the document body
+        document.body!.append(audio);
+         setState(() {
+        isVideoComplete = true;
+        isVideoProcess = false;
+        // createHistory('custom.mpg', message);
+      });
+
+        // Play the audio
+        audio.play();
+
+        print('Audio played successfully');
+      }
+      
+      }
+
+      catch(error){
+        print(error.toString());
+      }
+  
+  }
+
+  void createHistory(String name, String message_) async {
+    String apiUrl = 'http://127.0.0.1:3000/add_message'; 
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': name,
+          'message': message_,
+          'user_id':widget.user_id
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Message added successfully');
+      } else {
+        print('Failed to add message');
+        print('Status code: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
   }
   
 
@@ -214,7 +295,8 @@ class _HomePageState extends State<HomePage> {
                               showAdd = false;
                               isVideoProcess = true;
                             }),
-                              uploadVideo(value!)
+                              getAudio(value!)
+                              // uploadVideo(value!)
                             });
                             },
                           ),
@@ -224,7 +306,9 @@ class _HomePageState extends State<HomePage> {
                           AddVideoButton(
                             icon: Icons.history,
                             btnName: "View History",
-                            onPressed: (){},
+                            onPressed: (){
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => ViewHistoryPage(userId: widget.user_id,)));
+                            },
                           ),
                           const SizedBox(
                             height: 10,
@@ -265,7 +349,9 @@ class _HomePageState extends State<HomePage> {
                               showAdd = false;
                               isVideoProcess = true;
                             }),
-                              uploadVideo(value!)
+                            getAudio(value!)
+                              // uploadVideo(value!)
+                              
                             });
                             
                             // final result = await FilePicker.platform
@@ -308,11 +394,17 @@ class _HomePageState extends State<HomePage> {
                           style: GoogleFonts.poppins(
                               color: Colors.black, fontSize: 18),
                         ),
-                        if (isVideoComplete) Text(
-                          message,
-                          style: GoogleFonts.poppins(
-                              color: Colors.red, fontSize: 18),
-                        ),
+                        // if (isVideoComplete) 
+                        // SizedBox(
+                        //   width: 500,
+                        //   child: Text(
+                        //   message,
+                        //   style: GoogleFonts.poppins(
+                        //       color: Colors.red, fontSize: 18),
+                        // ),),
+                      
+                        
+
                       ],
                     ))
               ],

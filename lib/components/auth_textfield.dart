@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AuthTextField extends StatelessWidget {
-  const AuthTextField({super.key});
+  const AuthTextField({super.key, required this.controller});
+
+  final TextEditingController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -13,6 +15,7 @@ class AuthTextField extends StatelessWidget {
       margin: const EdgeInsets.only(top: 20),
       width: 300,
       child: TextFormField(
+        controller: controller,
         style: GoogleFonts.poppins(color: const Color(0xFF1C1C1C), fontSize: 12),
           decoration: InputDecoration(
             filled: true,

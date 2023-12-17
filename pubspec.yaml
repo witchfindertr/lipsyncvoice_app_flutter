@@ -19,6 +19,9 @@ dependencies:
   http: ^1.1.0
   path_provider: ^2.1.1
   universal_image_picker_web: ^0.0.3
+  mongo_dart: ^0.9.3
+  audioplayers: ^5.2.1
+  just_audio: ^0.9.36
 
 dev_dependencies:
   flutter_test:
