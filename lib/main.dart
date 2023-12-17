@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lipsyncvoice_app/screens/homepage.dart';
 import 'package:lipsyncvoice_app/screens/login_screen.dart';
 import 'package:lipsyncvoice_app/screens/view_history.dart';
 
@@ -32,6 +33,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: LoginScreen()
+      // home: HomePage(user_id: 1)
     );
   }
 }

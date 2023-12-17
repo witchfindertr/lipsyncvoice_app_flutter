@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:lipsyncvoice_app/screens/view_history.dart';
+import 'package:loading_indicator/loading_indicator.dart';
 import 'package:universal_image_picker_web/image_picker_web.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,41 @@ class _HomePageState extends State<HomePage> {
   bool isVideoComplete = false;
   late String message;
   AudioPlayer _audioPlayer = AudioPlayer();
-  bool _isPlaying = false;
+  bool isPlaying = false;
+  Duration audioDuration = const Duration();
+
+  @override
+  void initState(){
+    _audioPlayer.setSourceUrl("assets/audio/speech.wav");
+    _audioPlayer.onPlayerComplete.listen((event) {
+      setState(() {
+        isPlaying = false;
+      });
+      print('Audio playback completed');
+    });
+    _audioPlayer.onPositionChanged.listen((event) {
+      setState(() {
+        audioDuration = event;
+      });
+    });
+   
+    super.initState();
+  }
+
+  void playAudio(bool play){
+    if (play){
+      _audioPlayer.play(UrlSource('assets/audio/speech.wav'));
+      setState(() {
+        isPlaying = true;
+      });
+    }
+    else{
+      _audioPlayer.pause();
+      setState(() {
+        isPlaying = false;
+      });
+    }
+  }
 
   resetStates(){
     setState(() {
@@ -42,7 +77,7 @@ class _HomePageState extends State<HomePage> {
       arrowPressed = false;
       showAdd = true;
       isVideoProcess = false;
-      _isPlaying = false;
+      // _isPlaying = false;
       isVideoComplete = false;
     });
   }
@@ -52,20 +87,6 @@ class _HomePageState extends State<HomePage> {
       contactPressed = !contactPressed;
     });
   }
-
-  // Future<void> fetchData() async {
-  //   final response = await http.get(Uri.parse('http://localhost:5000/run'), headers: {
-  //     'Access-Control-Allow-Origin': '*', 
-  //   },);
-  //   if (response.statusCode == 200) {
-  //     final data = json.decode(response.body);
-  //     setState(() {
-  //       isVideoComplete = true;
-  //       message = data['output'];
-  //       isVideoProcess = false;
-  //     });
-  //   }
-  // }
 
   void uploadVideo(Uint8List videoData) async {
      try {
@@ -92,52 +113,6 @@ class _HomePageState extends State<HomePage> {
   
   }
 
-  void getAudio(Uint8List videoData) async {
-
-     print("getAudio called");
-     try {
-      final response = await http.post(
-        Uri.parse('http://localhost:5000/runTest'),
-        body: videoData,
-        headers: {
-          'Content-Type': 'video/mpg', 
-        },
-      );
-      if (response.statusCode == 200){
-        print("API hit succesful");
-        var uint8List = response.bodyBytes;
-        print(uint8List.toString());
-        // Create a Blob and create an object URL
-        var blob = Blob([uint8List], 'audio/wav');
-        var objectUrl = Url.createObjectUrlFromBlob(blob);
-        print("object Url: $objectUrl");
-
-        // Create an audio element and set the source
-        var audio = AudioElement()
-          ..src = objectUrl
-          ..controls = true; // Show controls for play/pause
-
-        // Append the audio element to the document body
-        document.body!.append(audio);
-         setState(() {
-        isVideoComplete = true;
-        isVideoProcess = false;
-        // createHistory('custom.mpg', message);
-      });
-
-        // Play the audio
-        audio.play();
-
-        print('Audio played successfully');
-      }
-      
-      }
-
-      catch(error){
-        print(error.toString());
-      }
-  
-  }
 
   void createHistory(String name, String message_) async {
     String apiUrl = 'http://127.0.0.1:3000/add_message'; 
@@ -295,8 +270,8 @@ class _HomePageState extends State<HomePage> {
                               showAdd = false;
                               isVideoProcess = true;
                             }),
-                              getAudio(value!)
-                              // uploadVideo(value!)
+                              // getAudio(value!)
+                              uploadVideo(value!)
                             });
                             },
                           ),
@@ -340,47 +315,44 @@ class _HomePageState extends State<HomePage> {
                     flex: 5,
                     child: Column(
                       children: [
-                        if (showAdd) FloatingActionButton(
-                          backgroundColor: Colors.black,
-                          onPressed: () async {
-                            // Uint8List? videoData = 
+                        if (showAdd) SizedBox(
+                          height: 50,
+                          child: ElevatedButton.icon(onPressed: () async {
                             await ImagePickerWeb.getVideoAsBytes().then((value) => {
                               setState(() {
                               showAdd = false;
                               isVideoProcess = true;
                             }),
-                            getAudio(value!)
-                              // uploadVideo(value!)
+                              uploadVideo(value!)
                               
                             });
-                            
-                            // final result = await FilePicker.platform
-                            //     .pickFiles(type: FileType.video);
-                          
-                            // final file = result?.files.first;
-                            // if (file?.name == "custom.mpg"){
-                            //   setState(() {
-                            //   showAdd = false;
-                            //   isVideoProcess = true;
-                            // });
-                            // await fetchData();
-                            // }
-                            // if (result == null) return;      
-                          },
-                          child: const Icon(
-                            Icons.add,
-                            color: Colors.white,
-                          ),
+                          }, icon: const Icon(Icons.add), label: const Text("Upload Video"), style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(Colors.black),
+                            foregroundColor: MaterialStateProperty.all(Colors.white),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18.0),
+                                side: const BorderSide(color: Colors.black)
+                              )
+                            )
+                          ),),
                         ),
+                        
                         const SizedBox(
                           height: 10,
                         ),
-                        if (showAdd) Text(
-                          "Upload Video",
-                          style: GoogleFonts.poppins(
-                              color: Colors.black, fontSize: 14),
+                       
+                        if (isVideoProcess) const SizedBox(
+                          height: 40,
+                          width: 40,
+                          child:  LoadingIndicator(
+                            indicatorType: Indicator.ballScaleMultiple, 
+                            colors:  [Colors.white, Colors.orange],      
+                            strokeWidth: 2,                     
+                            backgroundColor: Colors.white,      
+                            pathBackgroundColor: Colors.black   
+                          ),
                         ),
-                        if (isVideoProcess) const CircularProgressIndicator(color: Colors.black,),
                         const SizedBox(
                           height: 10,
                         ),
@@ -394,17 +366,20 @@ class _HomePageState extends State<HomePage> {
                           style: GoogleFonts.poppins(
                               color: Colors.black, fontSize: 18),
                         ),
-                        // if (isVideoComplete) 
-                        // SizedBox(
-                        //   width: 500,
-                        //   child: Text(
-                        //   message,
-                        //   style: GoogleFonts.poppins(
-                        //       color: Colors.red, fontSize: 18),
-                        // ),),
-                      
-                        
-
+                        if (isVideoComplete) 
+                        SizedBox(
+                          width: 500,
+                          child: Text(
+                          message,
+                          style: GoogleFonts.poppins(
+                              color: Colors.red, fontSize: 18),
+                        ),),
+                        const SizedBox(height: 20,),
+                       if (isVideoComplete) ElevatedButton.icon(onPressed: (){
+                          playAudio(!isPlaying);
+                        }, icon: isPlaying ?  const Icon(Icons.pause) : const Icon(Icons.play_arrow), label: isPlaying ? const Text("Pause Audio") : const Text("Play Audio")),
+                       const SizedBox(height: 20,),
+                       if (isVideoComplete) Text('${audioDuration.inMinutes}:${(audioDuration.inSeconds % 60).toString().padLeft(2, '0')}'),
                       ],
                     ))
               ],
